@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas de Melhorias - Festpan Alimentos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: #f8f9fa;
+        }
+        .nav-tabs .nav-link.active {
+            font-weight: 700;
+            color: #198754 !important;
+            border-bottom: 4px solid #198754;
+        }
+        .card {
+            transition: transform 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-8px);
+        }
+        .role-header {
+            height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+        textarea, input {
+            border: 2px dashed #ccc;
+            transition: all 0.3s;
+        }
+        textarea:focus, input:focus {
+            border-color: #198754;
+            box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+        }
+        @media print {
+            body { background: white; }
+            .nav-tabs, .btn, .lead { display: none !important; }
+            .card, .table { border: 2px solid #198754; }
+            input, textarea {
+                border: 1px solid #333 !important;
+                background: white !important;
+            }
+            h2, h4 { color: #198754 !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid bg-success text-white py-4 text-center shadow">
+        <h1 class="display-4 fw-bold mb-1">🍞 FESTPAN ALIMENTOS 🍞</h1>
+        <h2 class="h3 mb-0">Canvas de Melhorias Contínuas</h2>
+    </div>
+
+    <div class="container my-4">
+        <!-- Abas dos grupos -->
+        <ul class="nav nav-tabs justify-content-center mb-4" id="group-tabs" role="tablist"></ul>
+
+        <!-- Conteúdo das abas -->
+        <div class="tab-content" id="group-content"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const roles = [
+            { emoji: "🔵", title: "Líder Facilitador", nickname: "O Maestro", color: "bg-primary text-white" },
+            { emoji: "⏱️", title: "Guardião do Tempo", nickname: "O Cronometrista", color: "bg-warning text-dark" },
+            { emoji: "✍️", title: "Escriba Visual", nickname: "O Sintetizador", color: "bg-success text-white" },
+            { emoji: "🧐", title: "Questionador Estratégico", nickname: "O Auditor da Realidade", color: "bg-info text-white" },
+            { emoji: "❤️", title: "Guardião da Empatia", nickname: "Defensor do Fator Humano / Qualidade", color: "bg-danger text-white" },
+            { emoji: "🎤", title: "Porta-Voz", nickname: "O Embaixador", color: "bg-dark text-white" }
+        ];
+
+        const tabsUl = document.getElementById("group-tabs");
+        const contentDiv = document.getElementById("group-content");
+
+        for (let g = 1; g <= 6; g++) {
+            // === TAB ===
+            const tabLi = document.createElement("li");
+            tabLi.className = "nav-item";
+            tabLi.innerHTML = `
+                <a class="nav-link ${g===1?'active':''}" id="tab-grupo${g}" data-bs-toggle="tab" 
+                   data-bs-target="#grupo${g}" href="#grupo${g}" role="tab">
+                    Grupo ${g}
+                </a>`;
+            tabsUl.appendChild(tabLi);
+
+            // === PANE ===
+            const pane = document.createElement("div");
+            pane.className = `tab-pane fade ${g===1?'show active':''}`;
+            pane.id = `grupo${g}`;
+
+            let rolesHTML = "";
+            roles.forEach((role, i) => {
+                rolesHTML += `
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="role-header ${role.color}">${role.emoji}</div>
+                        <div class="card-body">
+                            <h5 class="card-title text-center fw-bold">${role.title}</h5>
+                            <p class="text-center text-muted small">${role.nickname}</p>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Nome</label>
+                                <input type="text" class="form-control" placeholder="Nome completo da pessoa">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Cargo na Festpan</label>
+                                <input type="text" class="form-control" placeholder="Ex: Coordenador de Produção">
+                            </div>
+                            <div>
+                                <label class="form-label fw-semibold">Responsabilidades no grupo</label>
+                                <textarea class="form-control" rows="4" placeholder="Descreva as responsabilidades..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            });
+
+            pane.innerHTML = `
+                <div class="p-4 bg-white rounded-4 shadow">
+                    <div class="text-center mb-5">
+                        <h2 class="display-6 text-success">Grupo ${g}</h2>
+                        <p class="lead text-muted">Equipe de Melhorias Contínuas</p>
+                    </div>
+                    
+                    <div class="row g-4">
+                        ${rolesHTML}
+                    </div>
+
+                    <div class="mt-5">
+                        <h4 class="border-bottom pb-2 mb-3 text-success">Atividades que o Grupo irá desenvolver</h4>
+                        <button onclick="addActivity(${g})" class="btn btn-success mb-3">
+                            <i>+</i> Nova Atividade
+                        </button>
+                        <table class="table table-bordered align-middle" id="table-${g}">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width:5%">#</th>
+                                    <th style="width:25%">Atividade</th>
+                                    <th style="width:35%">Descrição</th>
+                                    <th style="width:20%">Responsável</th>
+                                    <th style="width:15%">Prazo</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-${g}"></tbody>
+                        </table>
+                    </div>
+                </div>
+            `;
+            contentDiv.appendChild(pane);
+        }
+
+        // Função para adicionar linha de atividade
+        window.addActivity = function(group) {
+            const tbody = document.getElementById(`tbody-${group}`);
+            const rowNum = tbody.rows.length + 1;
+            
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                <td class="text-center fw-bold">${rowNum}</td>
+                <td><input type="text" class="form-control" placeholder="Ex: Reduzir desperdício de massa"></td>
+                <td><textarea class="form-control" rows="2" placeholder="Descreva em detalhes..."></textarea></td>
+                <td><input type="text" class="form-control" placeholder="Nome ou papel"></td>
+                <td><input type="date" class="form-control"></td>
+            `;
+            tbody.appendChild(tr);
+        };
+
+        // Adiciona 6 atividades iniciais em cada grupo
+        for (let g = 1; g <= 6; g++) {
+            for (let i = 0; i < 6; i++) {
+                addActivity(g);
+            }
+        }
+    </script>
+</body>
+</html>
