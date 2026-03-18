@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canvas de Melhoria - Workshop Festpan Alimentos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+        
+        :root {
+            --night-blue: #1e2a4a;
+            --festpan-green: #198754;
+            --festpan-red: #dc3545;
+            --festpan-blue: #0d6efd;
+            --festpan-yellow: #ffc107;
+        }
+
+        body { font-family: 'Poppins', sans-serif; background: #f1f3f5; color: #2d3436; }
+        
+        .main-header {
+            background: var(--night-blue);
+            color: white;
+            padding: 2.5rem 1rem;
+            border-bottom: 6px solid var(--festpan-green);
+            margin-bottom: 2rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .nav-tabs { border: none; gap: 8px; margin-bottom: 2rem; }
+        .nav-tabs .nav-link { 
+            border: none; background: #e2e8f0; color: #4a5568; 
+            border-radius: 30px; padding: 12px 25px; font-weight: 600;
+            transition: all 0.3s;
+        }
+        .nav-tabs .nav-link.active { 
+            background: var(--festpan-green) !important; color: white !important;
+            box-shadow: 0 4px 12px rgba(25,135,84,0.3);
+        }
+
+        .canvas-card { border-radius: 15px; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        
+        /* Blocos do Canvas */
+        .canvas-block {
+            min-height: 320px;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 1.5rem;
+            background: white;
+            border: 1px solid #e2e8f0;
+            transition: transform 0.2s;
+        }
+        .block-red    { border-top: 10px solid var(--festpan-red); }
+        .block-blue   { border-top: 10px solid var(--festpan-blue); }
+        .block-green  { border-top: 10px solid var(--festpan-green); }
+        .block-yellow { border-top: 10px solid var(--festpan-yellow); }
+
+        .step-info { 
+            font-size: 0.85rem; 
+            background: #f8f9fa; 
+            padding: 6px 15px; 
+            border-radius: 20px; 
+            font-weight: 700;
+            display: inline-block;
+            margin-bottom: 12px;
+            color: #4a5568;
+        }
+
+        .helper-text { font-size: 0.85rem; color: #718096; margin-bottom: 1.2rem; line-height: 1.5; }
+        
+        textarea.form-control {
+            border: 2px dashed #cbd5e0;
+            background: #fcfcfc;
+            font-size: 0.95rem;
+            color: #2d3436;
+        }
+        textarea.form-control:focus { 
+            border-color: var(--festpan-green); 
+            background: white;
+            box-shadow: none;
+            border-style: solid;
+        }
+
+        .role-card {
+            background: #fff;
+            border: 1px solid #edf2f7;
+            border-radius: 12px;
+            padding: 1.2rem;
+            height: 100%;
+            transition: box-shadow 0.3s;
+        }
+        .role-card:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .role-emoji { font-size: 2.2rem; margin-bottom: 10px; display: block; }
+
+        @media print {
+            .no-print, .btn, .nav-tabs { display: none !important; }
+            body { background: white; }
+            .tab-pane { display: block !important; opacity: 1 !important; page-break-after: always; }
+            .canvas-block { border: 2px solid #333 !important; break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-header text-center no-print">
+    <div class="container">
+        <h1 class="fw-bold mb-1 text-uppercase">Canvas de Melhoria</h1>
+        <p class="lead mb-0">Workshop Festpan Alimentos – Passo a Passo Detalhado</p>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <!-- Abas dos grupos -->
+    <ul class="nav nav-tabs justify-content-center" id="group-tabs"></ul>
+
+    <!-- Conteúdo -->
+    <div class="tab-content" id="group-content"></div>
+</div>
+
+<script>
+    const roles = [
+        { emoji: "🔵", title: "Líder Facilitador", nick: "O Maestro" },
+        { emoji: "⏱️", title: "Guardião do Tempo", nick: "O Cronometrista" },
+        { emoji: "✍️", title: "Escriba Visual", nick: "O Sintetizador" },
+        { emoji: "🧐", title: "Questionador Estratégico", nick: "Auditor da Realidade" },
+        { emoji: "❤️", title: "Guardião da Empatia", nick: "Defensor do Fator Humano" },
+        { emoji: "🎤", title: "Porta-Voz", nick: "O Embaixador" }
+    ];
+
+    const tabsUl = document.getElementById("group-tabs");
+    const contentDiv = document.getElementById("group-content");
+
+    for (let g = 1; g <= 6; g++) {
+        // TABS
+        const tabLi = document.createElement("li");
+        tabLi.className = "nav-item";
+        tabLi.innerHTML = `<a class="nav-link ${g===1?'active':''}" id="tab-grupo${g}" data-bs-toggle="tab" data-bs-target="#grupo${g}" href="#">Grupo ${g}</a>`;
+        tabsUl.appendChild(tabLi);
+
+        // PANES
+        const pane = document.createElement("div");
+        pane.className = `tab-pane fade ${g===1?'show active':''}`;
+        pane.id = `grupo${g}`;
+        
+        let rolesHTML = roles.map(role => `
+            <div class="col-md-4 mb-3">
+                <div class="role-card shadow-sm">
+                    <span class="role-emoji">${role.emoji}</span>
+                    <h6 class="fw-bold mb-1">${role.title}</h6>
+                    <small class="text-success d-block mb-3 fw-bold">${role.nick}</small>
+                    <input type="text" class="form-control form-control-sm mb-2" placeholder="Nome Completo">
+                    <input type="text" class="form-control form-control-sm" placeholder="Setor/Cargo">
+                </div>
+            </div>
+        `).join('');
+
+        pane.innerHTML = `
+            <div class="p-4 bg-white shadow canvas-card">
+                <div class="row align-items-center mb-5">
+                    <div class="col-md-8">
+                        <label class="small fw-bold text-muted">NOME DO GRUPO / PROJETO:</label>
+                        <input type="text" class="form-control form-control-lg border-0 bg-light fw-bold" value="Grupo ${g} – Melhoria Contínua">
+                    </div>
+                    <div class="col-md-4 text-end no-print">
+                        <button class="btn btn-outline-dark btn-sm" onclick="window.print()">🖨️ Exportar para PDF</button>
+                    </div>
+                </div>
+
+                <h5 class="fw-bold text-dark border-bottom pb-2 mb-4">I. Funções da Equipe</h5>
+                <div class="row g-3 mb-5">${rolesHTML}</div>
+
+                <h5 class="fw-bold text-dark border-bottom pb-2 mb-4">II. Desenvolvimento do Canvas</h5>
+                
+                <div class="row">
+                    <!-- PASSO 1 -->
+                    <div class="col-md-6">
+                        <div class="canvas-block block-red shadow-sm">
+                            <span class="step-info">📅 23 de Março - Passo 1</span>
+                            <h5 class="fw-bold text-danger">O Foco (O Que Faço?)</h5>
+                            <p class="helper-text">Defina o gargalo real. Brainstorming livre sem julgamentos. Escolha UMA ideia principal. <strong>O que mais nos atrapalha hoje?</strong></p>
+                            <textarea class="form-control" rows="8" placeholder="Escreva aqui a ideia escolhida em até duas frases. Seja específico (ex: reduzir tempo de troca de embalagem de 30 para 15 min)."></textarea>
+                        </div>
+                    </div>
+
+                    <!-- PASSO 2 -->
+                    <div class="col-md-6">
+                        <div class="canvas-block block-blue shadow-sm">
+                            <span class="step-info">📅 30 de Março - Passo 2</span>
+                            <h5 class="fw-bold text-primary">Os Processos (Como Faço?)</h5>
+                            <p class="helper-text">Atividades (passos), Recursos (materiais/tempo) e Parceiros (quem ajuda?). Use a regra: <strong>Quem faz o quê até quando?</strong></p>
+                            <textarea class="form-control" rows="8" placeholder="• Atividades Principais:&#10;• Recursos Necessários:&#10;• Principais Parceiros:"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- PASSO 3 -->
+                    <div class="col-md-6">
+                        <div class="canvas-block block-green shadow-sm">
+                            <span class="step-info">📅 06 de Abril - Passo 3</span>
+                            <h5 class="fw-bold text-success">As Pessoas (Para Quem?)</h5>
+                            <p class="helper-text">Quem será beneficiado? Como comunicar cedo, ouvir preocupações e engajar os influenciadores da equipe?</p>
+                            <textarea class="form-control" rows="8" placeholder="• Clientes Internos beneficiados:&#10;• Estratégia de Comunicação:&#10;• Como lidaremos com a resistência:"></textarea>
+                        </div>
+                    </div>
+
+                    <!-- PASSO 4 -->
+                    <div class="col-md-6">
+                        <div class="canvas-block block-yellow shadow-sm">
+                            <span class="step-info">📅 13 de Abril - Passo 4</span>
+                            <h5 class="fw-bold text-warning" style="color:#856404 !important">O Balanço (Retorno)</h5>
+                            <p class="helper-text">O esforço compensa o ganho? Prepare aqui o roteiro para a apresentação de <strong>7 minutos</strong> (Problema -> Plano -> Resultado).</p>
+                            <div class="row">
+                                <div class="col-6">
+                                    <label class="small fw-bold">Estrutura de Custos:</label>
+                                    <textarea class="form-control mt-1" rows="4" placeholder="Tempo, materiais, esforço..."></textarea>
+                                </div>
+                                <div class="col-6">
+                                    <label class="small fw-bold">Fluxos de Economia:</label>
+                                    <textarea class="form-control mt-1" rows="4" placeholder="Horas extras evitadas, kg ganhos..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TABELA DE PLANO DE AÇÃO -->
+                <div class="mt-5">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-dark border-bottom pb-2 mb-0">III. Plano de Ação (Execução)</h5>
+                        <button class="btn btn-success btn-sm no-print" onclick="addRow(${g})">+ Adicionar Ação</button>
+                    </div>
+                    <table class="table table-bordered table-hover">
+                        <thead class="table-light">
+                            <tr class="small text-uppercase">
+                                <th width="50">#</th>
+                                <th>O Quê? (Ação Direta)</th>
+                                <th>Quem? (Responsável Único)</th>
+                                <th>Até Quando? (Prazo Real)</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbody-${g}"></tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        contentDiv.appendChild(pane);
+    }
+
+    window.addRow = function(group) {
+        const tbody = document.getElementById(`tbody-${group}`);
+        const count = tbody.rows.length + 1;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td class="text-center small">${count}</td>
+            <td><input class="form-control form-control-sm" placeholder="Ex: Criar POP de troca"></td>
+            <td><input class="form-control form-control-sm" placeholder="Nome do responsável"></td>
+            <td><input type="date" class="form-control form-control-sm"></td>
+            <td>
+                <select class="form-select form-select-sm">
+                    <option>Pendente</option>
+                    <option>Em andamento</option>
+                    <option>Concluído</option>
+                </select>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    };
+
+    // Gera 3 linhas iniciais por padrão
+    for (let g = 1; g <= 6; g++) {
+        for (let i = 0; i < 3; i++) addRow(g);
+    }
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
